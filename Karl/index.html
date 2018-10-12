@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        canvas {
+            border:1px solid #000000;
+            background-color: #000000;
+        }
+    </style>
+</head>
+
+<body onload="startGame()" style="background-color: black; color: white;">
+
+<script>
+    var myScore;
+    var myGamePiece;
+    var myObstacles = [];
+
+    function startGame() {
+        //myScore = new component(400, 360, "transport.png", 180,0, "image");
+        //myGamePiece = new component(400, 360, "transport.png", 180,0, "image");
+
+        myGameArea.start();
+   }
+
+    var myGameArea = {
+        canvas : document.createElement("canvas"),
+        start : function() {
+            this.canvas.width = 1500;
+            this.canvas.height = 350;
+            this.context = this.canvas.getContext("2d");
+            document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+            this.frameNo = 0;
+            this.interval = setInterval(updateGameArea, 50);
+    },
+        clear : function() {
+            this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        },
+        stop : function() {
+            clearInterval(this.interval);
+        }
+    }
+
+    function component(width, height, color, x, y, type) {
+        this.type = type;
+        if (type == "image") {
+            this.image = new Image();
+            this.image.src = color;    
+        }
+        this.width = width;
+        this.height = height;
+        this.speedX = 0;
+        this.speedY = 0;
+        this.x = x;
+        this.y = y;
+        this.update = function() {
+            ctx = myGameArea.context;
+            if (type == "image") {
+                ctx.drawImage(this.image,
+                        this.x,
+                        this.y,
+                        this.width, this.height);
+            } else {
+                ctx.fillStyle = color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+        this.newPos = function() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+        }
+        function component (n) {
+            if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+            
+            return false;
+        }
+
+       this.crashWith = function(otherobj) {
+         var myleft = this.x;
+         var myright = this.x + (this.width);
+         var mytop = this.y;
+         var mybottom = this.y + (this.height);
+         var otherleft = otherobj.x;
+         var otherright = otherobj.x + (otherobj.width);
+         var othertop = otherobj.y;
+         var otherbottom = otherobj.y + (otherobj.height);
+         var crash = true;
+         if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+         crash = false;
+         }
+         return crash;
+         }
+    }
+
+    function updateGameArea() {
+        var x, y;
+        for (i = 9; i < myObstacles.length; i += 1) {
+            if (myGamePiece.crashWith(myObstacles[i])) {
+                //myGameArea.stop();
+                //return;
+            }
+        }
+        
+        myGameArea.clear();
+        myGameArea.frameNo += 1;
+        if (myGameArea.frameNo == 0 || everyinterval(5)) {
+            x = myGameArea.canvas.width ;
+            y = myGameArea.canvas.height ;
+            
+            myObstacles.push(new component(500, 500, "stars.png", x, 15, "image"));
+        }
+        for (i = 0; i < myObstacles.length; i += 1) {
+            myObstacles[i].x += - document.getElementById("speedval").value*100;
+            myObstacles[i].update();
+        }
+        var wid = 400-((document.getElementById("speedval").value*100)*3.9);
+        var pos = 180+((document.getElementById("speedval").value*100)*3.9);
+        if (document.getElementById("speedval").value==0 || document.getElementById("speedval").value==null){
+            myScore = new component(wid, 360, "transport1.png", pos,0, "image");
+            myGamePiece = new component(wid, 360, "transport1.png", pos,0, "image");
+
+            myScore.text="SCORE: " + myGameArea.frameNo;
+            myScore.update();
+        }
+        if (document.getElementById("speedval").value>0){
+            myScore = new component(wid, 360, "transport.png", pos,0, "image");
+            myGamePiece = new component(wid, 360, "transport.png", pos,0, "image");
+
+            myScore.text="SCORE: " + myGameArea.frameNo;
+            myScore.update();
+        }
+        myGamePiece.newPos();
+        myGamePiece.update();
+    }
+
+    function everyinterval(n) {
+        if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+        return false;
+    }
+</script>
+
+<style>
+    input[type=number] {
+        font-family: 'Segoe UI',Calibri;
+        font-size: 12pt;
+        background-color: #3CBC8D;
+        color: black;
+    }
+    input[type=number]:focus {
+        background-color: lightblue;
+        border: 1px solid #555;
+    }
+</style>
+    
+<style>input[type=range] {
+    -webkit-appearance: none;
+    background-color:beige;
+    width: 400px;
+    height:15px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background-color: #666;
+    opacity: 0.5;
+    width: 10px;
+    height: 20px;
+}
+</style>
+    
+<style>
+    h1, h2, p {
+        color: red;
+        margin-left: 20px;
+    }
+</style>
+
+<style>
+    h4 {
+        margin-left: 350px;
+    }
+</style>
+
+<div style="font-family: 'Segoe UI',Calibri; font-weight: normal;">
+    
+    <div align=center><br/><input id="speedval" type="range" min="0" max=".99" value="0" step=".01" onchange="showValue(this.value)" />
+        <span id="range" style="font-weight: normal">0</span><text style="font-weight: normal">c</text></div>
+    <br/>
+    
+   <div align=center><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="speed">Speed:</label>
+        <input style="background-color: beige; border: solid 1px gray; text-align: right; ;" type="number" id="result" name="result" readonly="true"> m/s
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="%C">%C:</label>
+        <input style="background-color: beige; border: solid 1px gray; text-align: right; padding-right: 0;" type="number" id="%C" name="%C" onchange="show(this.value)"><br/>
+    </div>
+    
+    <div align=center><br/>
+        &nbsp;
+        <label for="time">Proper Time:</label>
+        <input style="background-color: beige; border: solid 1px gray; text-align: right; padding-right: 0;" type="number" id="time" name="time"onchange="showValue(this.value)" > s
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="T_time">Relativistic Time:</label>
+        <input style="background-color: beige; border: solid 1px gray; text-align: right; padding-right: 0;" type="number" id="T_time" name="T_time" onchange="show(this.value)" > s<br/>
+    </div>
+
+    <div align=center><br/>
+        <label for="length">Proper Length:</label>
+        <input style="background-color: beige; border: solid 1px gray; text-align: right; padding-right: 0;" type="number" id="length" name="length" onchange="showValue(this.value)" > m
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="T_length">Relativistic Length:</label>
+        <input style="background-color: beige; border: solid 1px gray; text-align: right; padding-right: 0;" type="number" id="T_length" name="T_length" onchange="show(this.value)" > m<br/>
+    </div>
+
+    <div align=center><br/>
+        &nbsp;&nbsp;&nbsp;
+        <label for="mass">Proper Mass:</label>
+        <input style="background-color: beige; border: solid 1px gray; text-align: right; padding-right: 0;" type="number" id="mass" name="mass"onchange="showValue(this.value)" > kg
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <label for="T_mass">Relativistic Mass:</label>
+        <input style="background-color: beige; border: solid 1px gray; text-align: right; padding-right: 0;" type="number" id="T_mass" name="T_mass" onchange="show(this.value)" > kg<br/>
+    </div>
+    <br>
+</div>
+    
+<p id="demo"></p>
+<script>
+    //function myFunction() {
+      //  var num = 55678999999;
+        //var n = num.toExponential();
+        //document.getElementById("demo").innerHTML = n;
+    //}
+</script>
+
+<script type="text/javascript">
+    function showValue(newValue){
+        var x = document.getElementById("speedval").value;
+        document.getElementById("range").innerHTML=x;
+        
+        a=300000000;
+        var res = a*x;
+        
+        x = parseFloat(x)*100;
+        document.getElementById("%C").value=x;
+        document.getElementById("result").value=res;
+        
+        var t = document.getElementById("time").value;
+        t = parseFloat(t);
+        document.getElementById("time").innerHTML=t;
+        document.getElementById("T_time").value=t/Math.sqrt(1-(Math.pow(res,2)/Math.pow(a,2)));
+
+        var l = document.getElementById("length").value;
+        l = parseFloat(l);
+        document.getElementById("length").innerHTML=l;
+        document.getElementById("T_length").value=l * Math.sqrt(1-(Math.pow(res,2)/Math.pow(a,2)));
+        
+        var m = document.getElementById("mass").value;
+        m = parseFloat(m);
+        document.getElementById("mass").innerHTML=m;
+        document.getElementById("T_mass").value=m/Math.sqrt(1-(Math.pow(res,2)/Math.pow(a,2)));
+        
+        if(document.activeElement=="time" || document.activeElement=="length" || document.activeElement=="mass"){
+            document.getElementById("result").onchange = "showValue(this.value)"
+        }
+        }
+        </script>
+    
+    <script type="text/javascript">
+    function show(newValue){
+        var x = document.getElementById("speedval").value;
+        document.getElementById("range").innerHTML=x;
+        
+        a=300000000;
+        var res = a*x;
+        
+        x = parseFloat(x)*100;
+        document.getElementById("%C").value=x;
+        document.getElementById("result").value=res;
+        
+        var rt = document.getElementById("T_time").value;
+        rt = parseFloat(rt);
+        document.getElementById("T_time").innerHTML=rt;
+        document.getElementById("time").value=rt*Math.sqrt(1-(Math.pow(res,2)/Math.pow(a,2)));
+
+        var rl = document.getElementById("T_length").value;
+        rl = parseFloat(rl);
+        document.getElementById("T_length").innerHTML=rl;
+        document.getElementById("length").value=rl / Math.sqrt(1-(Math.pow(res,2)/Math.pow(a,2)));
+        
+        var rm = document.getElementById("T_mass").value;
+        rm = parseFloat(rm);
+        document.getElementById("T_mass").innerHTML=rm;
+        document.getElementById("mass").value=rm*Math.sqrt(1-(Math.pow(res,2)/Math.pow(a,2)));
+        
+        document.getElementById("range").innerHTML=x/100;
+         if(document.activeElement=="T_time" || document.activeElement=="T_length" || document.activeElement=="T_mass"){
+            document.getElementById("result").onchange = "show(this.value)"
+        }
+        }
+        </script>
+    </body>
+</html>
